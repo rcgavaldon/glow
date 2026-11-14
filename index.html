@@ -45,9 +45,9 @@ function embed(url){
   if(m) return `<div class="vid"><iframe src="https://drive.google.com/file/d/${m[1]}/preview" allow="autoplay" allowfullscreen></iframe></div>`;
   return `<div class="vid"><video src="${url}" controls playsinline></video></div>`;
 }
-const pending='<div class="flame">🕯️</div><p><b>Your lamp is being made!</b></p><p style="color:var(--muted)">The video of your lamp printing will show up right here soon. Check back in a few days.</p>';
+const pending='<div class="flame">🕯️</div><p><b>Your print is being made!</b></p><p style="color:var(--muted)">The video of your print being made will show up right here soon. Check back in a few days.</p>';
 (async()=>{
-  if(!valid){box.innerHTML='<p>Scan the code on the bottom of your lamp to see it being printed.</p>';return;}
+  if(!valid){box.innerHTML='<p>Scan the code on the bottom of your print to see it being printed.</p>';return;}
   const id=hex(await crypto.subtle.digest('SHA-256',enc.encode('glow-id:'+code))).slice(0,32);
   const r=await fetch('data/'+id+'.json?'+Date.now());
   if(!r.ok){box.innerHTML=pending;return;}
@@ -58,7 +58,7 @@ const pending='<div class="flame">🕯️</div><p><b>Your lamp is being made!</b
     let src=o.video;
     if(o.kind==='enc'){box.innerHTML=html+'<p>Loading your video…</p>'; if(o.message) box.querySelector('.msg').textContent='“'+o.message+'”';
       const ct=await (await fetch(o.video)).arrayBuffer(); src=URL.createObjectURL(new Blob([await dec(k,unb64(o.viv),ct)],{type:'video/mp4'}));}
-    html+='<p><b>Watch your lamp being made!</b></p>'+embed(src)+'<p style="color:var(--muted);font-size:14px;margin-top:12px">Every layer of your lamp, start to finish.</p>';
+    html+='<p><b>Watch your print being made!</b></p>'+embed(src)+'<p style="color:var(--muted);font-size:14px;margin-top:12px">Every layer of your print, start to finish.</p>';
   } else html+=pending;
   box.innerHTML=html; if(o.message) box.querySelector('.msg').textContent='“'+o.message+'”';
 })().catch(()=>{box.innerHTML='<p>Couldn’t load right now — try again in a minute.</p>';});
