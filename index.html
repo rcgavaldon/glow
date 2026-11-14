@@ -40,7 +40,7 @@ function embed(url){
   return `<a class="btn" href="${url}">Watch your lamp being made</a>`;
 }
 fetch('orders.json?'+Date.now()).then(r=>r.json()).then(d=>{
-  const o=code&&d[code];
+  const o=code&&(d[code]||(/^G\d{3}$/.test(code)?{video:''}:null));
   if(!code||!o){box.innerHTML='<p>Scan the code on the bottom of your lamp to see it being printed.</p>';return;}
   if(o.video){box.innerHTML='<p><b>Watch your lamp being made!</b></p>'+embed(o.video)+'<p style="color:var(--muted);font-size:14px;margin-top:12px">Every layer of your lamp, start to finish.</p>';}
   else{box.innerHTML='<div class="flame">🕯️</div><p><b>Your lamp is being made!</b></p><p style="color:var(--muted)">The video of your lamp printing will show up right here soon. Check back in a few days.</p>';}
