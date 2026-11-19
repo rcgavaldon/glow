@@ -39,11 +39,23 @@
   <div id="login" style="display:none"><h1>Glow Lamp Hub</h1><p class="mut">Enter your admin key (only needed once on this device).</p><input id="key" placeholder="Admin key"><button id="go">Open hub</button><p id="lerr" style="color:#b3261e"></p></div>
   <div id="app" style="display:none">
     <h1>Glow Lamp Hub <small class="mut" id="upd"></small></h1>
+    <div class="bar"><button class="f on" id="tabO">Orders</button><button class="f" id="tabS">Sellers</button></div>
+    <div id="ordersView">
     <div class="kpis" id="kpis"></div>
     <div class="sellers" id="sellers"></div>
     <div class="bar" id="filters"></div>
     <div class="bar"><input id="q" placeholder="Search name, words, code, period…"><button id="refresh">↻ Refresh</button><button onclick="print()">Print list</button></div>
     <table><thead><tr><th>Order</th><th>For (deliver to)</th><th>Lamp</th><th class="hide-sm">Buyer / seller</th><th>Status</th><th>Mark</th></tr></thead><tbody id="rows"></tbody></table>
+    </div>
+    <div id="sellersView" style="display:none">
+      <div class="k" style="margin-bottom:10px"><b style="font-size:18px">Create a seller ID</b>
+        <div class="bar"><input id="sname" placeholder="Student full name" style="flex:2;min-width:180px;padding:8px 12px;border-radius:999px;border:1px solid var(--line);background:var(--card);color:var(--ink)">
+        <input id="semail" placeholder="email (optional)" style="flex:2;min-width:160px;padding:8px 12px;border-radius:999px;border:1px solid var(--line);background:var(--card);color:var(--ink)">
+        <button id="sadd" style="background:var(--gold);color:#fff;border-color:var(--gold)">Create ID</button></div>
+        <div class="mut">Students open <b>rcgavaldon.github.io/glow/seller.html</b> and type their ID to see their sales and take orders.</div>
+        <div id="serr" style="color:#b3261e;font-size:14px"></div></div>
+      <table><thead><tr><th>Seller</th><th>ID</th><th>Lamps</th><th>Collected</th><th>Active</th></tr></thead><tbody id="srows"></tbody></table>
+    </div>
   </div>
 </main>
 <script>
@@ -84,6 +96,20 @@ function render(){
     const r=await fetch(API,{method:'POST',headers:{'Content-Type':'text/plain;charset=utf-8'},body:JSON.stringify({action:'admin',key:KEY,code:b.dataset.c,field:b.dataset.k,value:on})}); const j=await r.json();
     if(!j.ok) alert(j.error); await load(); });
 }
+
+// ---- sellers tab ----
+async function sellers(body){ const r=await fetch(API,{method:'POST',headers:{'Content-Type':'text/plain;charset=utf-8'},body:JSON.stringify(Object.assign({action:'sellers',key:KEY},body||{}))}); return r.json(); }
+function drawSellers(j){
+  if(!j.ok){ $('serr').textContent=j.error; return; } $('serr').textContent='';
+  $('srows').innerHTML=j.sellers.sort((a,b)=>b.money-a.money).map(s=>`<tr><td><b>${esc(s.name)}</b><div class="mut">${esc(s.email)}</div></td><td><code style="font-size:15px">${esc(s.code)}</code></td><td>${s.lamps}</td><td>$${s.money}</td>
+    <td><button class="tg ${s.active?'on':''}" data-code="${esc(s.code)}" data-on="${s.active?1:0}">${s.active?'On':'Off'}</button></td></tr>`).join('');
+  [...$('srows').querySelectorAll('.tg')].forEach(b=>b.onclick=async()=>{ b.disabled=true; drawSellers(await sellers({op:'active',code:b.dataset.code,value:b.dataset.on!=='1'})); });
+}
+$('tabO').onclick=()=>{ $('ordersView').style.display='block'; $('sellersView').style.display='none'; $('tabO').classList.add('on'); $('tabS').classList.remove('on'); };
+$('tabS').onclick=async()=>{ $('ordersView').style.display='none'; $('sellersView').style.display='block'; $('tabS').classList.add('on'); $('tabO').classList.remove('on'); drawSellers(await sellers({})); };
+$('sadd').onclick=async()=>{ const n=$('sname').value.trim(); if(!n){ $('serr').textContent='Type the student\'s name.'; return; } $('sadd').disabled=true;
+  const j=await sellers({op:'add',name:n,email:$('semail').value.trim()}); $('sadd').disabled=false; if(j.ok){ $('sname').value=''; $('semail').value=''; } drawSellers(j); };
+
 $('q').oninput=render; $('refresh').onclick=load;
 $('go').onclick=()=>{ KEY=$('key').value.trim(); try{localStorage.setItem('glowHubKey',KEY)}catch(e){} load(); };
 if(KEY) load().catch(e=>showLogin(e.message)); else showLogin();
