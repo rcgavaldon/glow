@@ -1,0 +1,267 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Order a Glow Lamp</title>
+<meta name="robots" content="noindex">
+<style>
+  :root{--bg:#fbf8f2;--ink:#222;--muted:#6b6b6b;--gold:#b07a1e;--card:#fff;--line:#e4dccd;--err:#b3261e;--ok:#1e7a3c}
+  @media (prefers-color-scheme:dark){:root{--bg:#141414;--ink:#eee;--muted:#aaa;--card:#1f1f1f;--line:#333}}
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.45 system-ui,-apple-system,Segoe UI,sans-serif}
+  main{max-width:640px;margin:0 auto;padding:18px 16px 60px}
+  h1{font:700 28px Georgia,serif;color:var(--gold);text-align:center;margin:6px 0 2px}
+  .sub{text-align:center;color:var(--muted);font-size:13px;margin-bottom:10px}
+  .seller{background:#1e7a3c;color:#fff;border-radius:10px;padding:8px 12px;font-size:14px;margin:8px 0;display:none}
+  .step{margin-top:20px}
+  .step h2{font-size:17px;margin:0 0 8px;display:flex;align-items:center;gap:8px}
+  .step h2 i{font-style:normal;background:var(--gold);color:#fff;border-radius:50%;width:24px;height:24px;display:inline-flex;align-items:center;justify-content:center;font-size:13px}
+  .grid{display:grid;gap:8px}
+  .g3{grid-template-columns:repeat(3,1fr)} .g2{grid-template-columns:repeat(2,1fr)}
+  .opt{background:var(--card);border:2px solid var(--line);border-radius:12px;padding:8px;text-align:center;cursor:pointer;font-size:14px;user-select:none}
+  .opt img{width:100%;border-radius:8px;display:block;margin-bottom:5px;background:#000}
+  .opt small{display:block;color:var(--muted);font-size:12px}
+  .opt.on{border-color:var(--gold);box-shadow:0 0 0 2px var(--gold) inset}
+  label{display:block;font-size:13px;color:var(--muted);margin:8px 0 3px}
+  input,textarea{width:100%;padding:10px 12px;border:1.5px solid var(--line);border-radius:10px;font-size:17px;background:var(--card);color:var(--ink)}
+  textarea{min-height:64px;font-size:15px}
+  .cnt{float:right;font-size:12px;color:var(--muted)} .cnt.bad{color:var(--err);font-weight:bold}
+  .preview{background:#0d0c0b;border-radius:14px;padding:10px;display:flex;justify-content:center;margin-top:10px}
+  .price{font:700 22px Georgia,serif;color:var(--gold);text-align:center;margin-top:16px}
+  button{width:100%;margin-top:12px;padding:14px;border:0;border-radius:12px;background:var(--gold);color:#fff;font-size:18px;font-weight:700;cursor:pointer}
+  button:disabled{opacity:.5}
+  .err{color:var(--err);font-size:14px;margin-top:8px;min-height:1em}
+  .done{background:var(--card);border-radius:14px;padding:18px;text-align:center;margin-top:16px;border:1px solid var(--line)}
+  .code{font:700 30px ui-monospace,Consolas,monospace;letter-spacing:2px;margin:6px 0}
+  .badge{display:inline-block;padding:4px 10px;border-radius:999px;font-size:13px;font-weight:700}
+  .wait{background:#fff3cd;color:#7a5b00} .paid{background:#d9f2e1;color:#1e7a3c}
+  .hide{display:none}
+  select{width:100%;padding:10px 12px;border:1.5px solid var(--line);border-radius:10px;font-size:17px;background:var(--card);color:var(--ink)}
+  .it{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:10px 12px;margin:8px 0;display:flex;justify-content:space-between;gap:10px;align-items:center;font-size:14px}
+  .it .x{background:none;color:var(--err);width:auto;margin:0;padding:4px 8px;font-size:14px}
+  .it code{font-weight:700}
+</style>
+</head>
+<body>
+<main>
+  <h1>✨ Order a Glow Lamp ✨</h1>
+  <div class="sub">Chess Club fundraiser &bull; every lamp is printed in white</div>
+  <div class="seller" id="sellerBar"></div>
+
+  <div id="form">
+    <div class="step"><h2><i>1</i>Pick a design</h2>
+      <div class="grid g3" id="designs"></div></div>
+
+    <div class="step"><h2><i>2</i>Plain or add your words?</h2>
+      <div class="grid g2" id="styles"></div>
+      <div id="lines"></div>
+      <div class="preview"><svg id="pv" style="width:100%;max-width:520px;height:auto" viewBox="0 0 520 320"></svg></div>
+    </div>
+
+    <div class="step"><h2><i>3</i>Who is it for?</h2>
+      <label>Deliver to &mdash; full name</label><input id="dname" maxlength="40" autocomplete="off">
+      <div class="grid g2"><div><label>Grade</label><select id="dgrade"><option value="">Pick&hellip;</option><option>9</option><option>10</option><option>11</option><option>12</option><option>Staff</option></select></div>
+        <div><label>Period to deliver</label><select id="dper"><option value="">Pick&hellip;</option><option>1</option><option>2</option><option>3</option><option>4</option><option>5</option><option>6</option><option>7</option><option>8</option></select></div></div>
+      <label>Gift message (optional) &mdash; shows up when they scan the QR code on the bottom <span class="cnt" id="giftc"></span></label>
+      <textarea id="gift" maxlength="160"></textarea>
+    </div>
+    <div class="price" id="price"></div>
+    <button id="add">Add to cart</button>
+    <div class="err" id="err"></div>
+  </div>
+
+  <div class="cart hide" id="cart">
+    <h2 style="font-size:18px;margin:18px 0 6px">Your cart</h2>
+    <div id="items"></div>
+    <div class="price" id="ctotal"></div>
+    <div id="cartBtns"><button id="more" style="background:#555">+ Add another lamp</button><button id="checkout">Checkout</button></div>
+    <div id="pay" class="hide">
+      <label>Your full name (the buyer)</label><input id="buyer" maxlength="40" autocomplete="off">
+      <p style="margin:14px 0 4px"><b>Pay the total to a Chess Club seller.</b> The seller types their code:</p>
+      <input id="scode" placeholder="Seller code" autocomplete="off" style="text-transform:uppercase;text-align:center">
+      <button id="paynow">Pay &amp; place order</button>
+      <button id="paylater" style="background:none;color:var(--gold);font-size:15px;padding:6px">Place order now, pay a seller later</button>
+      <div class="err" id="perr"></div>
+    </div>
+  </div>
+
+  <div class="done hide" id="done">
+    <div>Your cart number</div>
+    <div class="code" id="dcart"></div>
+    <div><span class="badge" id="dstat"></span></div>
+    <div id="dlist" style="text-align:left;margin-top:10px"></div>
+    <div id="payBox">
+      <p><b>Pay <span id="dprice"></span> to a Chess Club seller.</b><br>The seller types their code here:</p>
+      <input id="pcode" placeholder="Seller code" autocomplete="off" style="text-transform:uppercase;text-align:center">
+      <button id="pay2">Mark as paid</button>
+      <div class="err" id="perr2"></div>
+    </div>
+    <p style="font-size:13px;color:var(--muted)">Screenshot this page. After a lamp is printed, scan the QR code on its bottom to watch it being made!</p>
+    <button id="again" style="background:#555">New order</button>
+  </div>
+</main>
+<script>
+const API = 'https://script.google.com/macros/s/AKfycbwjGLyOPWmt-HEdDSuqC_hzxM0vHVcqmwDSRrwid8x1l4uEjVADZyMbafsvh7urklYM/exec';
+const DESIGNS = [['Christmas trees','img/christmas.jpg'],['Maple leaf','img/leaf.jpg'],['Snowman','img/snowman.jpg']];
+const KEY = {'Christmas trees':'christmas','Maple leaf':'leaf','Snowman':'snowman'};
+const STYLES = {
+  'Plain':               {price:7,  hint:'Design all around', lines:[]},
+  'Name + heart':        {price:10, hint:'1 name, up to 8 letters', lines:[['Name',8]]},
+  'Initials in a heart': {price:10, hint:'2 letters', lines:[['First initial',1],['Second initial',1]]},
+  'Couple heart':        {price:10, hint:'2 names, up to 8 letters each', lines:[['First name',8],['Second name',8]]},
+  'Heart message':       {price:10, hint:'2 short lines', lines:[['Line 1 (up to 10)',10,'raw'],['Line 2 (up to 7)',7,'raw']]},
+  'BFFs':                {price:10, hint:'2 to 4 names, up to 8 letters each', lines:[['Name 1',8],['Name 2',8],['Name 3 (optional)',8],['Name 4 (optional)',8]]},
+};
+let design=null, style=null; const $=id=>document.getElementById(id);
+const seller = (()=>{ try{ const q=new URLSearchParams(location.search).get('seller'); if(q!==null){ localStorage.setItem('glowSeller', q.toUpperCase()); } return localStorage.getItem('glowSeller')||''; }catch(e){ return ''; } })();
+
+function card(el, label, sub, img, on){ const d=document.createElement('div'); d.className='opt'; d.innerHTML=(img?`<img src="${img}" alt="">`:'')+`<b>${label}</b>`+(sub?`<small>${sub}</small>`:''); d.onclick=on; el.appendChild(d); return d; }
+DESIGNS.forEach(([n,img])=>{ const d=card($('designs'), n, '', img, ()=>{ design=n; [...$('designs').children].forEach(c=>c.classList.toggle('on',c===d)); draw(); }); });
+Object.entries(STYLES).forEach(([n,s])=>{ const d=card($('styles'), n, s.hint+' &bull; $'+s.price, null, ()=>{ style=n; [...$('styles').children].forEach(c=>c.classList.toggle('on',c===d)); buildLines(); draw(); }); });
+
+function letters(s){ return s.replace(/[^A-Za-z]/g,'').length; }
+function buildLines(){
+  const box=$('lines'); box.innerHTML='';
+  STYLES[style].lines.forEach(([lab,max,raw],i)=>{
+    const l=document.createElement('label'); l.innerHTML=`${lab} <span class="cnt" id="c${i}"></span>`; box.appendChild(l);
+    const inp=document.createElement('input'); inp.id='l'+i; inp.maxLength=raw?max:max+2; inp.autocomplete='off'; inp.oninput=draw; box.appendChild(inp);
+  });
+}
+function words(){ return STYLES[style]?STYLES[style].lines.map((_,i)=>($('l'+i)||{}).value||'').map(s=>s.replace(/\s+/g,' ').trim()):[]; }
+function problem(){
+  if(!design) return 'Pick a design.'; if(!style) return 'Pick a style.';
+  const w=words(), L=STYLES[style].lines;
+  for(let i=0;i<L.length;i++){ const [lab,max,raw]=L[i]; const n=raw?w[i].length:letters(w[i]); if(n>max) return `${lab.replace(/ \(.*/,'')}: too long.`; }
+  if(style==='Name + heart'&&!w[0]) return 'Type the name.';
+  if(style==='Initials in a heart'&&(letters(w[0])!==1||letters(w[1])!==1)) return 'Type both initials.';
+  if(style==='Couple heart'&&(!w[0]||!w[1])) return 'Type both names.';
+  if(style==='Heart message'&&!w[0]) return 'Type your message.';
+  if(style==='BFFs'&&w.filter(x=>x).length<2) return 'BFFs needs at least 2 names.';
+  if(fitErr) return fitErr;
+  if(!$('dname').value.trim()) return 'Who is it for? Type their full name.';
+  if(!$('dgrade').value) return 'Pick their grade.';
+  if(!$('dper').value) return 'Pick the period to deliver it.';
+  return '';
+}
+// ===== true-to-print preview: same sizes/fit rules as the lamp builder, projected onto the lamp picture =====
+const PD = {"cap":71.58,"adv":{"A":77.78,"B":77.78,"C":77.78,"D":77.78,"E":72.22,"F":66.7,"G":83.3,"H":83.3,"I":38.92,"J":66.7,"K":83.3,"L":66.7,"M":94.38,"N":83.3,"O":83.3,"P":72.22,"Q":83.3,"R":77.78,"S":72.22,"T":72.22,"U":83.3,"V":77.78,"W":100.0,"X":77.78,"Y":77.78,"Z":72.22,"a":66.7,"b":66.7,"c":66.7,"d":66.7,"e":66.7,"f":38.92,"g":66.7,"h":66.7,"i":33.3,"j":33.3,"k":66.7,"l":33.3,"m":100.0,"n":66.7,"o":66.7,"p":66.7,"q":66.7,"r":44.38,"s":61.08,"t":44.38,"u":66.7,"v":61.08,"w":94.38,"x":66.7,"y":61.08,"z":55.62,"0":66.7,"1":66.7,"2":66.7,"3":66.7,"4":66.7,"5":66.7,"6":66.7,"7":66.7,"8":66.7,"9":66.7," ":33.35,"'":27.78,"&":88.92,".":33.3,"!":33.3,"?":61.08,",":33.3,"-":33.3},"ro":[30.175,30.847,31.583,32.255,32.876,33.453,33.992,34.504,34.998,35.46,35.912,36.34,36.746,37.139,37.509,37.863,38.197,38.517,38.813,39.1,39.357,39.609,39.83,40.047,40.23,40.41,40.558,40.697,40.815,40.917,40.997,41.057,41.099,41.122,41.122,41.106,41.074,41.016,40.944,40.855,40.742,40.618,40.47,40.307,40.126,39.926,39.709,39.477,39.223,38.959,38.669,38.374,38.049,37.721,37.362,36.998,36.608,36.207,35.785,35.345,34.891,34.408,33.918,33.389,32.854,32.279,31.69,31.065,30.412,29.715,29.143]};
+const ZC=34, MIN_H=7, PANEL_W=72;
+const roAt=z=>{ z=Math.max(0,Math.min(70,z)); const i=Math.floor(z), f=z-i; return PD.ro[i]*(1-f)+PD.ro[Math.min(70,i+1)]*f; };
+// camera exactly like the renderer (az 90, el 16, dist 245, fov 27, 420x480 image shown at 260x297)
+const CAM=(()=>{ const a=Math.PI/2, e=16*Math.PI/180, tgt=[0,0,31], d=245; const cam=[tgt[0]+d*Math.cos(a)*Math.cos(e), tgt[1]+d*Math.sin(a)*Math.cos(e), tgt[2]+d*Math.sin(e)];
+  const sub=(p,q)=>p.map((v,i)=>v-q[i]), nrm=v=>{const l=Math.hypot(...v); return v.map(x=>x/l);}, cross=(p,q)=>[p[1]*q[2]-p[2]*q[1],p[2]*q[0]-p[0]*q[2],p[0]*q[1]-p[1]*q[0]];
+  const f=nrm(sub(tgt,cam)), rg=nrm(cross(f,[0,0,1])), up=cross(rg,f); return {cam,f,rg,up,t:Math.tan(13.5*Math.PI/180)}; })();
+function proj(s,z){ const r=roAt(z), th=Math.PI/2+s/41; const P=[r*Math.cos(th), r*Math.sin(th), z]; const d=P.map((v,i)=>v-CAM.cam[i]);
+  const dot=q=>d[0]*q[0]+d[1]*q[1]+d[2]*q[2]; const fz=dot(CAM.f), u=dot(CAM.rg)/fz, v=dot(CAM.up)/fz; const W=420,H=480,K=260/420;
+  return [(u/CAM.t+1)*W/2*K, (1-v/(CAM.t*H/W))*H/2*K]; }
+const isDesc=s=>/[gjpqy]/.test(s);
+const tw=(s,h)=>{ let a=0; for(const c of s) a+=(PD.adv[c]??60); return a*0.965*h/PD.cap; };            // ink width (mm) at cap height h
+function heartPts(w, sy=1){ const p=[]; for(let i=0;i<240;i++){ const t=i/240*2*Math.PI; p.push([16*Math.sin(t)**3, 13*Math.cos(t)-5*Math.cos(2*t)-2*Math.cos(3*t)-Math.cos(4*t)]); }
+  const xs=p.map(q=>q[0]); const sc=w/(Math.max(...xs)-Math.min(...xs)); return p.map(([x,y])=>[x*sc, y*sc*sy]); }
+function centerPts(p,cx,cy){ const xs=p.map(q=>q[0]), ys=p.map(q=>q[1]); const dx=cx-(Math.max(...xs)+Math.min(...xs))/2, dy=cy-(Math.max(...ys)+Math.min(...ys))/2; return p.map(([x,y])=>[x+dx,y+dy]); }
+function inside(p,x,y){ let c=false; for(let i=0,j=p.length-1;i<p.length;j=i++){ const [xi,yi]=p[i],[xj,yj]=p[j]; if(((yi>y)!=(yj>y))&&(x<(xj-xi)*(y-yi)/(yj-yi)+xi)) c=!c; } return c; }
+function edgeDist(p,x,y){ let m=1e9; for(let i=0,j=p.length-1;i<p.length;j=i++){ const [ax,ay]=p[j],[bx,by]=p[i]; const vx=bx-ax,vy=by-ay; let t=((x-ax)*vx+(y-ay)*vy)/(vx*vx+vy*vy); t=Math.max(0,Math.min(1,t)); m=Math.min(m,Math.hypot(ax+t*vx-x,ay+t*vy-y)); } return m; }
+function rectIn(p,inset,cx,cy,w,h){ const c=0.45*h; for(let i=0;i<=10;i++){ const x=cx-w/2+c+(w-2*c)*i/10, y=cy-h/2+c+(h-2*c)*i/10; for(const [px,py] of [[x,cy-h/2],[x,cy+h/2],[cx-w/2,y],[cx+w/2,y]]) if(!inside(p,px,py)||edgeDist(p,px,py)<inset) return false; } return true; }   // tuned to match the builder's real-glyph fit
+function tidy(s,msg){ s=(s||'').replace(/\s+/g,' ').trim(); if(s&&s===s.toUpperCase()&&/[A-Z]/.test(s)){ if(!msg) s=s.toLowerCase().replace(/\b\w/g,c=>c.toUpperCase()); else { s=s.toLowerCase(); s=s[0].toUpperCase()+s.slice(1); s=s.replace(/\bi\b/g,'I'); } } return s; }
+// layout in lamp millimetres (x = arc mm, y = height)
+function layout(st, w){
+  const boxH=(s,h)=>h*(isDesc(s)?1.29:1.0);
+  const T=(s,h,cx,cy)=>({type:'text',s,h,cx,base: cy - boxH(s,h)/2 + (isDesc(s)? h*0.29:0)});
+  if(st==='Name + heart'){ const s=w[0]||'Name'; let h=17; while(tw(s,h)*1.03+19>PANEL_W+8 && h>=MIN_H) h-=0.5; if(h<MIN_H) return {err:'That name is too long.'};
+    const W=tw(s,h)+19; return {items:[T(s,h,-W/2+tw(s,h)/2,ZC), {type:'heart',w:15,cx:W/2-7.5,cy:ZC,fill:true}]}; }
+  if(st==='Initials in a heart'){ const a=(w[0]||'A').toUpperCase(), c=(w[1]||'B').toUpperCase();
+    return {items:[{type:'heart',w:58,cx:0,cy:ZC-1,stroke:2.6}, T(a,14,-14.5,ZC+3), {type:'heart',w:10,cx:0,cy:ZC+3,fill:true}, T(c,14,14.5,ZC+3)]}; }
+  if(st==='Couple heart'||st==='Heart message'){
+    const cpl=st==='Couple heart'; const l1=cpl?(w[0]||'Name')+' &':(w[0]||'I love you'), l2=cpl?(w[1]||'Name'):(w[1]||'Mom'), f2=cpl?0.95:1.0;
+    const H=centerPts(heartPts(76,0.88),0,35);
+    for(let h=13;h>=MIN_H-0.001;h-=0.25) for(let y1=30;y1<58;y1+=0.5){
+      const h2=h*f2, y2=y1-h-3; if(rectIn(H,3.4,0,y1,tw(l1,h),boxH(l1,h)) && rectIn(H,3.4,0,y2,tw(l2,h2),boxH(l2,h2)))
+        return {items:[{type:'heart',w:76,sy:0.88,cx:0,cy:35,stroke:2.6}, T(l1,h,0,y1), T(l2,h2,0,y2)]}; }
+    return {err:'Too long to fit in the heart. Try shorter words.'}; }
+  if(st==='BFFs'){ const ns=w.filter(x=>x); const names=ns.length?ns:['Name','Name']; const four=names.length>3;
+    const hh=four?10:11, hn=four?7.5:8.5, gap=four?1.35:1.4; const fit=(s,hm,wm)=>{ let h=hm; while(tw(s,h)>wm&&h>=MIN_H) h-=0.25; return h; };
+    const hd=fit('BFFs',hh,60); const hs=names.map(n=>fit(n,hn,64)); if(hs.some(h=>h<MIN_H)) return {err:'One of the names is too long.'};
+    const lines=[['BFFs',hh,hd]].concat(names.map((n,i)=>[n,hn,hs[i]])); let y=ZC+lines.reduce((a,l)=>a+l[1]*gap,0)/2; const items=[];
+    for(const [s,slot,h] of lines){ items.push({type:'text',s,h,cx:0,base:y-slot}); y-=slot*gap; } return {items}; }
+  return {items:[]};
+}
+function pathOf(pts){ return 'M'+pts.map(([s,z])=>proj(s,z).map(v=>v.toFixed(1)).join(' ')).join(' L')+'Z'; }
+function svgOf(items){
+  let g='';
+  for(const it of items){
+    if(it.type==='heart'){ const P=centerPts(heartPts(it.w,it.sy||1),it.cx,it.cy);
+      if(it.fill) g+=`<path d="${pathOf(P)}" fill="#fff1c2" filter="url(#glow)"/>`;
+      else { const k=(it.w-it.stroke)/it.w; const Q=P.map(([x,y])=>[it.cx+(x-it.cx)*k, it.cy+(y-it.cy)*k]); const sw=it.stroke*(proj(1,35)[0]-proj(0,35)[0]);
+        g+=`<path d="${pathOf(Q)}" fill="none" stroke="#fff1c2" stroke-width="${sw.toFixed(2)}" stroke-linejoin="round" filter="url(#glow)"/>`; } }
+    else { const h=it.h, W=tw(it.s,h);
+      const [x0,y0]=proj(it.cx-W/2, it.base), [x1]=proj(it.cx+W/2, it.base), [,yc]=proj(it.cx, it.base+h); const capPx=y0-yc;
+      g+=`<text x="${((x0+x1)/2).toFixed(1)}" y="${y0.toFixed(1)}" text-anchor="middle" font-family="'Arial Black','Archivo Black',Arial,sans-serif" font-weight="900" font-size="${(capPx/0.716).toFixed(2)}" textLength="${(x1-x0).toFixed(1)}" lengthAdjust="spacingAndGlyphs" fill="#fff1c2" filter="url(#glow)">${it.s.replace(/&/g,'&amp;').replace(/</g,'&lt;')}</text>`; } }
+  return g; }
+let fitErr='';
+function draw(){
+  STYLES[style]&&STYLES[style].lines.forEach(([_,max,raw],i)=>{ const v=($('l'+i)||{}).value||''; const n=raw?v.length:letters(v); const c=$('c'+i); if(c){ c.textContent=`${n}/${max}`; c.classList.toggle('bad',n>max); } });
+  const msg=style==='Heart message'; const w=words().map(x=>tidy(x,msg)); const k=KEY[design]||'christmas'; const plain=!style||style==='Plain';
+  let g=`<defs><filter id="glow" x="-30%" y="-30%" width="160%" height="160%"><feGaussianBlur stdDeviation="1.6" result="b"/><feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge></filter></defs>`;
+  const lab=(x,t)=>`<text x="${x}" y="314" text-anchor="middle" font-size="13" fill="#d9c9a6" font-family="system-ui,sans-serif">${t}</text>`;
+  if(plain){ g+=`<image href="img/${k}.jpg" x="130" y="0" width="260" height="297"/>`+lab(260, design?design+' — all the way around':'Pick a design'); fitErr=''; }
+  else { g+=`<image href="img/${k}.jpg" x="0" y="0" width="260" height="297"/>`+lab(130,(design||'Design')+' — back &amp; sides')+`<image href="img/${k}_blank.jpg" x="260" y="0" width="260" height="297"/>`+lab(390,'Front — your words');
+    const L=layout(style,w); fitErr=L.err||''; g+=`<g transform="translate(260,0)">`+(L.err?`<text x="130" y="150" text-anchor="middle" font-size="14" fill="#ffb4a8">${L.err}</text>`:svgOf(L.items))+`</g>`; }
+  $('pv').innerHTML=g;
+  $('price').textContent = style ? `This lamp: $${STYLES[style].price}` : '';
+  $('giftc').textContent = $('gift').value.length+'/160';
+}
+$('gift').oninput=draw;
+
+async function api(method, body, qs){
+  const r = method==='GET' ? await fetch(API+'?'+new URLSearchParams(qs)) : await fetch(API,{method:'POST',headers:{'Content-Type':'text/plain;charset=utf-8'},body:JSON.stringify(body)});
+  return r.json();
+}
+if(seller){ api('GET',null,{action:'seller',code:seller}).then(j=>{ if(j.ok){ $('sellerBar').style.display='block'; $('sellerBar').textContent=`Seller mode: ${j.seller} — orders placed here are marked PAID (collect cash first).`; } else { try{localStorage.removeItem('glowSeller')}catch(e){} } }).catch(()=>{}); }
+
+let cart=[];
+const esc=t=>String(t).replace(/&/g,'&amp;').replace(/</g,'&lt;');
+function descr(it){ const w=(it.words||[]).filter(x=>x); return `${esc(it.design)} &bull; ${esc(it.style)}${w.length?': <b>'+esc(w.join(' / '))+'</b>':''}`; }
+function showCart(){
+  $('cart').classList.toggle('hide',!cart.length);
+  $('items').innerHTML=cart.map((it,i)=>`<div class="it"><div>${descr(it)}<br><span style="color:var(--muted)">For ${esc(it.dname)} &bull; grade ${esc(it.dgrade)} &bull; period ${esc(it.dper)}</span></div><div style="text-align:right">$${it.price}<br><button class="x" data-i="${i}">remove</button></div></div>`).join('');
+  [...$('items').querySelectorAll('.x')].forEach(b=>b.onclick=()=>{ cart.splice(+b.dataset.i,1); showCart(); });
+  $('ctotal').textContent=cart.length?`Total: $${cart.reduce((a,it)=>a+it.price,0)} for ${cart.length} lamp${cart.length>1?'s':''}`:'';
+  if(!cart.length){ $('form').classList.remove('hide'); $('pay').classList.add('hide'); $('cartBtns').classList.remove('hide'); }
+}
+function resetLamp(){ design=null; style=null; [...document.querySelectorAll('.opt.on')].forEach(o=>o.classList.remove('on')); $('lines').innerHTML=''; $('dname').value=''; $('gift').value=''; $('dgrade').value=''; $('dper').value=''; draw(); }
+$('add').onclick=()=>{
+  const p=problem(); $('err').textContent=p; if(p) return;
+  const msg=style==='Heart message'; let w=words().map(x=>tidy(x,msg));
+  if(style==='Initials in a heart') w=[(w[0]+w[1]).toUpperCase()];
+  cart.push({design,style,words:w,price:STYLES[style].price,dname:$('dname').value.trim(),dgrade:$('dgrade').value,dper:$('dper').value,gift:$('gift').value.trim()});
+  resetLamp(); $('form').classList.add('hide'); showCart(); $('cart').scrollIntoView({behavior:'smooth'});
+};
+$('more').onclick=()=>{ $('form').classList.remove('hide'); window.scrollTo({top:0,behavior:'smooth'}); };
+$('checkout').onclick=()=>{ $('cartBtns').classList.add('hide'); $('pay').classList.remove('hide'); if(seller) $('scode').value=seller; $('buyer').focus(); };
+async function place(withCode){
+  $('perr').textContent=''; if(!$('buyer').value.trim()){ $('perr').textContent='Type your full name (the buyer).'; return; }
+  const code=withCode?($('scode').value||'').trim():''; if(withCode&&!code){ $('perr').textContent='The seller needs to type their code (or choose pay later).'; return; }
+  const btns=[$('paynow'),$('paylater')]; btns.forEach(b=>b.disabled=true);
+  try{ const j=await api('POST',{action:'create',buyer:$('buyer').value,seller:code,items:cart.map(it=>({design:it.design,style:it.style,l1:it.words[0]||'',l2:it.words[1]||'',l3:it.words[2]||'',l4:it.words[3]||'',dname:it.dname,dgrade:it.dgrade,dper:it.dper,gift:it.gift}))});
+    if(!j.ok) throw new Error(j.error); cart=[]; showDone(j); }
+  catch(e){ $('perr').textContent='Could not place the order: '+e.message; } finally{ btns.forEach(b=>b.disabled=false); }
+}
+$('paynow').onclick=()=>place(true); $('paylater').onclick=()=>place(false);
+function showDone(j){
+  ['form','cart'].forEach(i=>$(i).classList.add('hide')); $('done').classList.remove('hide');
+  $('dcart').textContent=j.cart; const paid=j.status==='PAID';
+  $('dstat').textContent=paid?'PAID'+(j.seller?' — '+j.seller:''):'WAITING FOR PAYMENT'; $('dstat').className='badge '+(paid?'paid':'wait');
+  $('dlist').innerHTML=(j.items||[]).map(it=>`<div class="it"><div>${descr(it)}<br><span style="color:var(--muted)">For ${esc(it.dname)}</span></div><div><code>${esc(it.code)}</code></div></div>`).join('');
+  $('dprice').textContent='$'+j.total; $('payBox').classList.toggle('hide',paid); history.replaceState(null,'','#'+j.cart);
+}
+$('pay2').onclick=async()=>{ $('perr2').textContent=''; $('pay2').disabled=true;
+  try{ const j=await api('POST',{action:'pay',cart:$('dcart').textContent,seller:$('pcode').value}); if(!j.ok) throw new Error(j.error); showDone(j); }
+  catch(e){ $('perr2').textContent=e.message; } finally{ $('pay2').disabled=false; } };
+$('again').onclick=()=>{ history.replaceState(null,'',location.pathname+location.search); location.reload(); };
+(async()=>{ const c=location.hash.slice(1); if(!c||API.startsWith('PASTE')) return;
+  try{ const j=await api('GET',null,{action:'status',cart:c}); if(j.ok) showDone(j); }catch(e){} })();
+draw();
+</script>
+</body>
+</html>
