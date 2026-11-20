@@ -48,6 +48,14 @@
   <h1>✨ Order a Glow Lamp ✨</h1>
   <div class="sub">Chess Club fundraiser &bull; every lamp is printed in white</div>
   <div class="seller" id="sellerBar"></div>
+  <div class="done hide" id="gate">
+    <p style="font-size:18px;margin:4px 0 12px"><b>Sign in with your Burnhamwood school account to order.</b></p>
+    <a id="loginBtn" style="display:block;background:var(--gold);color:#fff;padding:14px;border-radius:12px;font-weight:700;font-size:18px;text-decoration:none">Sign in with Google (school account)</a>
+    <p style="font-size:13px;color:var(--muted)">Your school email is attached to your order.</p>
+  </div>
+  <div id="who" class="sub hide"></div>
+  <a href="index.html#G098977FF" target="_blank" style="display:block;text-align:center;background:var(--card);border:1.5px solid var(--gold);color:var(--gold);border-radius:12px;padding:10px;margin:8px 0;font-weight:700;text-decoration:none">&#9654; See what they get when they scan the bottom of the lamp<br><span style="font-weight:400;font-size:13px;color:var(--muted)">your gift message + a video of their lamp being 3D printed (sample)</span></a>
+  <div id="bwmsg" style="position:fixed;left:50%;bottom:24px;transform:translateX(-50%);background:#b3261e;color:#fff;padding:10px 16px;border-radius:10px;font-weight:700;z-index:9;display:none"></div>
 
   <div id="form">
     <div class="step"><h2><i>1</i>Pick a design</h2>
@@ -78,10 +86,10 @@
     <div id="cartBtns"><button id="more" style="background:#555">+ Add another lamp</button><button id="checkout">Checkout</button></div>
     <div id="pay" class="hide">
       <label>Your full name (the buyer)</label><input id="buyer" maxlength="40" autocomplete="off">
-      <p style="margin:14px 0 4px"><b>Pay the total to a Chess Club seller.</b> The seller types their code:</p>
+      <p style="margin:14px 0 4px"><b>Bring the total to Mr. Gavaldon (Room HS 112) or a Chess Club member to pay.</b> We start printing once you pay &mdash; ready <b>24&ndash;48 hours</b> after payment. If you are paying a seller right now, they type their code:</p>
       <input id="scode" placeholder="Seller code" autocomplete="off" style="text-transform:uppercase;text-align:center">
       <button id="paynow">Pay &amp; place order</button>
-      <button id="paylater" style="background:none;color:var(--gold);font-size:15px;padding:6px">Place order now, pay a seller later</button>
+      <button id="paylater" style="background:none;color:var(--gold);font-size:15px;padding:6px">Place order now, pay in person later</button>
       <div class="err" id="perr"></div>
     </div>
   </div>
@@ -92,7 +100,7 @@
     <div><span class="badge" id="dstat"></span></div>
     <div id="dlist" style="text-align:left;margin-top:10px"></div>
     <div id="payBox">
-      <p><b>Pay <span id="dprice"></span> to a Chess Club seller.</b><br>The seller types their code here:</p>
+      <p><b>Bring <span id="dprice"></span> to Mr. Gavaldon (Room HS 112) or a Chess Club member.</b><br>We start printing once you pay &mdash; ready 24&ndash;48 hours after payment.<br>The seller types their code here:</p>
       <input id="pcode" placeholder="Seller code" autocomplete="off" style="text-transform:uppercase;text-align:center">
       <button id="pay2">Mark as paid</button>
       <div class="err" id="perr2"></div>
@@ -102,6 +110,24 @@
   </div>
 </main>
 <script>
+// Shared bad-word check (same list used by the order page and the Apps Script backend).
+// Normalizes leetspeak/spacing tricks; whole-word list catches short words without hitting names like "Cassandra".
+var BW_WORDS = ['ass','asses','arse','bitch','bitches','bastard','cock','cocks','cum','cunt','damn','dick','dicks','dildo','fag','fags','faggot','fuck','fucks','fucker','fucking','hell','hoe','hoes','jizz','kkk','nazi','nigga','nigger','penis','porn','pussy','rape','sex','sexy','shit','shits','shitty','slut','sluts','tit','tits','twat','vagina','whore','wtf','stfu','milf','boob','boobs','anal','retard','retarded','kys',
+  'puta','puto','putas','putos','pendejo','pendeja','pendejos','cabron','cabrona','chinga','chingar','chingada','chingado','verga','vergas','culo','culero','culera','mierda','joto','jotos','marica','maricon','pinche','pito','panocha','cono','perra','zorra','mamon','mamada'];
+var BW_PARTS = ['fuck','shit','bitch','nigg','fagg','cunt','whore','pussy','penis','vagina','porn','pendej','chinga','verga','mierda','culer','maricon','panocha'];
+function bwNorm_(s) {
+  return String(s || '').toLowerCase()
+    .replace(/[0]/g, 'o').replace(/[@4]/g, 'a').replace(/[1!|]/g, 'i').replace(/3/g, 'e').replace(/[5$]/g, 's').replace(/7/g, 't').replace(/ñ/g, 'n');
+}
+function hasBadWord(s) {
+  var n = bwNorm_(s);
+  var c = n.replace(/([a-z])\1+/g, '$1');                       // repeated letters squashed: "fuuuck" -> "fuck"
+  var words = n.split(/[^a-z]+/).concat(c.split(/[^a-z]+/)).filter(Boolean);
+  var joined = [n.replace(/[^a-z]/g, ''), c.replace(/[^a-z]/g, '')];   // catches "f u c k" / "f.u.c.k"
+  return words.some(w => BW_WORDS.indexOf(w) >= 0) || BW_PARTS.some(p => joined.some(j => j.indexOf(p) >= 0));
+}
+
+const LOGIN_URL = 'https://script.google.com/a/macros/burnhamwood.org/s/AKfycbw_tvUTJRbJ-PNM8Zu9DBcZ9oLWIBT9bgn2Y7oKn7KGSHRjlFGHlJw7qVu_Sp4DrqdIxg/exec';
 const API = 'https://script.google.com/macros/s/AKfycbwjGLyOPWmt-HEdDSuqC_hzxM0vHVcqmwDSRrwid8x1l4uEjVADZyMbafsvh7urklYM/exec';
 const DESIGNS = [['Christmas trees','img/christmas.jpg'],['Maple leaf','img/leaf.jpg'],['Snowman','img/snowman.jpg']];
 const KEY = {'Christmas trees':'christmas','Maple leaf':'leaf','Snowman':'snowman'};
@@ -243,13 +269,13 @@ async function place(withCode){
   $('perr').textContent=''; if(!$('buyer').value.trim()){ $('perr').textContent='Type your full name (the buyer).'; return; }
   const code=withCode?($('scode').value||'').trim():''; if(withCode&&!code){ $('perr').textContent='The seller needs to type their code (or choose pay later).'; return; }
   const btns=[$('paynow'),$('paylater')]; btns.forEach(b=>b.disabled=true);
-  try{ const j=await api('POST',{action:'create',buyer:$('buyer').value,seller:code,items:cart.map(it=>({design:it.design,style:it.style,l1:it.words[0]||'',l2:it.words[1]||'',l3:it.words[2]||'',l4:it.words[3]||'',dname:it.dname,dgrade:it.dgrade,dper:it.dper,gift:it.gift}))});
-    if(!j.ok) throw new Error(j.error); cart=[]; showDone(j); }
+  try{ const j=await api('POST',{action:'create',token:tok,buyer:$('buyer').value,seller:code,items:cart.map(it=>({design:it.design,style:it.style,l1:it.words[0]||'',l2:it.words[1]||'',l3:it.words[2]||'',l4:it.words[3]||'',dname:it.dname,dgrade:it.dgrade,dper:it.dper,gift:it.gift}))});
+    if(!j.ok){ if(/^LOGIN/.test(j.error)){ setTok(''); } throw new Error(j.error.replace(/^LOGIN: /,'')); } cart=[]; showDone(j); }
   catch(e){ $('perr').textContent='Could not place the order: '+e.message; } finally{ btns.forEach(b=>b.disabled=false); }
 }
 $('paynow').onclick=()=>place(true); $('paylater').onclick=()=>place(false);
 function showDone(j){
-  ['form','cart'].forEach(i=>$(i).classList.add('hide')); $('done').classList.remove('hide');
+  ['form','cart','gate'].forEach(i=>$(i).classList.add('hide')); $('done').classList.remove('hide');
   $('dcart').textContent=j.cart; const paid=j.status==='PAID';
   $('dstat').textContent=paid?'PAID'+(j.seller?' — '+j.seller:''):'WAITING FOR PAYMENT'; $('dstat').className='badge '+(paid?'paid':'wait');
   $('dlist').innerHTML=(j.items||[]).map(it=>`<div class="it"><div>${descr(it)}<br><span style="color:var(--muted)">For ${esc(it.dname)}</span></div><div><code>${esc(it.code)}</code></div></div>`).join('');
@@ -259,8 +285,24 @@ $('pay2').onclick=async()=>{ $('perr2').textContent=''; $('pay2').disabled=true;
   try{ const j=await api('POST',{action:'pay',cart:$('dcart').textContent,seller:$('pcode').value}); if(!j.ok) throw new Error(j.error); showDone(j); }
   catch(e){ $('perr2').textContent=e.message; } finally{ $('pay2').disabled=false; } };
 $('again').onclick=()=>{ history.replaceState(null,'',location.pathname+location.search); location.reload(); };
-(async()=>{ const c=location.hash.slice(1); if(!c||API.startsWith('PASTE')) return;
+(async()=>{ const c=location.hash.slice(1); if(!c||/^login=/.test(c)||API.startsWith('PASTE')) return;
   try{ const j=await api('GET',null,{action:'status',cart:c}); if(j.ok) showDone(j); }catch(e){} })();
+// ---- school sign-in ----
+let tok='';
+function tokInfo(t){ try{ const v=atob(t.split('.')[0].replace(/-/g,'+').replace(/_/g,'/')).split('|'); return +v[1]>Date.now()?v[0]:''; }catch(e){ return ''; } }
+function setTok(t){ tok=t; try{ t?localStorage.setItem('glowLogin',t):localStorage.removeItem('glowLogin'); }catch(e){}
+  const who=tokInfo(tok); const ordering=!$('done').classList.contains('hide');
+  $('gate').classList.toggle('hide',!!who||ordering); $('who').classList.toggle('hide',!who);
+  if(!ordering){ $('form').classList.toggle('hide',!who); if(!who) $('cart').classList.add('hide'); else showCart(); }
+  if(who){ $('who').innerHTML='Signed in as <b>'+esc(who)+'</b> &bull; <a href="#" id="out">sign out</a>'; $('out').onclick=e=>{ e.preventDefault(); setTok(''); }; } }
+$('loginBtn').href=LOGIN_URL;
+(()=>{ const m=location.hash.match(/^#login=(.+)$/); let t='';
+  if(m){ t=m[1]; history.replaceState(null,'',location.pathname+location.search); } else { try{ t=localStorage.getItem('glowLogin')||''; }catch(e){} }
+  setTok(tokInfo(t)?t:''); })();
+// ---- no bad words: wipe the box ----
+document.addEventListener('input',e=>{ const el=e.target; if(!/^(INPUT|TEXTAREA)$/.test(el.tagName)) return;
+  if(hasBadWord(el.value)){ el.value=''; el.dispatchEvent(new Event('input',{bubbles:false})); $('bwmsg').textContent='Please keep it school-appropriate.'; $('bwmsg').style.display='block'; try{ draw(); }catch(_){}
+    setTimeout(()=>$('bwmsg').style.display='none',3500); } },true);
 draw();
 </script>
 </body>
