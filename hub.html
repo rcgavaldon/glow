@@ -85,9 +85,9 @@ function render(){
     .sort((a,b)=>filt==='todeliver'?(Number(a.Period)-Number(b.Period)):0);
   $('rows').innerHTML=list.map(o=>{ const st=LBL[stage(o)]; const w=[o['Line 1'],o['Line 2'],o['Line 3'],o['Line 4']].filter(x=>x).join(' / ');
     return `<tr><td><b>${esc(o['Order #'])}</b><div class="mut">cart ${esc(o.Cart)}</div></td>
-      <td><b>${esc(o['Deliver to'])}</b><div class="mut">${o.Channel==='Out of school'?'<b style="color:#b07a1e">OUT OF SCHOOL</b> &bull; via '+esc(o['Seller link']||o['Paid to']||'')+(o.Contact?' &bull; '+esc(o.Contact):''):'grade '+esc(o.Grade)+' &bull; period '+esc(o.Period)}</div></td>
+      <td><b>${esc(o['Deliver to'])}</b><div class="mut">${o.Channel==='Out of school'?'<b style="color:#b07a1e">OUT OF SCHOOL</b> &bull; via '+esc(o['Seller link']||o['Paid to']||'')+(o.Contact?' &bull; '+esc(o.Contact):''):'grade '+esc(o.Grade)+' &bull; period '+esc(o.Period)+(o.Teacher?' &bull; '+esc(o.Teacher):'')}</div></td>
       <td>${esc(o.Design)} &bull; ${esc(o.Style)}${w?`<div><b>${esc(w)}</b></div>`:''}${o['Gift message']?`<div class="mut">“${esc(o['Gift message'])}”</div>`:''}</td>
-      <td class="hide-sm">${esc(o['Buyer name'])}${o['Buyer email']?'<div class="mut">'+esc(o['Buyer email'])+'</div>':''}<div class="mut">$${esc(o.Price)} ${o['Paid to']?'&bull; paid to '+esc(o['Paid to']):''}</div></td>
+      <td class="hide-sm">${esc(o['Buyer name'])}${o['Buyer email']?'<div class="mut">'+esc(o['Buyer email'])+'</div>':''}${o['Buyer 1st period']?'<div class="mut">1st per: '+esc(o['Buyer 1st period'])+'</div>':''}${o.Channel!=='Out of school'&&o.Contact?'<div class="mut">'+esc(o.Contact)+'</div>':''}<div class="mut">$${esc(o.Price)} ${o['Paid to']?'&bull; paid to '+esc(o['Paid to']):''}</div></td>
       <td><span class="st ${st[1]}">${st[0]}</span></td>
       <td>${o.Status!=='PAID'?`<button class="tg" data-c="${esc(o['Order #'])}" data-k="Paid">Mark paid</button>`:''}
           <button class="tg ${o.Printed?'on':''}" data-c="${esc(o['Order #'])}" data-k="Printed">Printed</button>

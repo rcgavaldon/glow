@@ -79,8 +79,8 @@ async function open_(c){
 }
 let PEND={in:[],out:[]}, TAB='in';
 function showPend(){ const L=PEND[TAB];
-  $('pend').innerHTML=L.length?L.map((o,i)=>`<div class="pc"><b>${esc(o.buyer)}</b> &bull; $${o.total}${o.contact?` &bull; ${esc(o.contact)}`:''}
-    ${o.items.map(it=>`<div>${esc(it.design)} &bull; ${esc(it.style)}${it.words.length?' &bull; '+esc(it.words.join(' / ')):''} &bull; for ${esc(it.forName)}${it.grade?` (gr ${esc(it.grade)}, per ${esc(it.per)})`:''}</div>`).join('')}
+  $('pend').innerHTML=L.length?L.map((o,i)=>`<div class="pc"><b>${esc(o.buyer)}</b>${o.bteach?` (1st per: ${esc(o.bteach)})`:''} &bull; $${o.total}${o.contact?` &bull; ${esc(o.contact)}`:''}
+    ${o.items.map(it=>`<div>${esc(it.design)} &bull; ${esc(it.style)}${it.words.length?' &bull; '+esc(it.words.join(' / ')):''} &bull; for ${esc(it.forName)}${it.grade?` (gr ${esc(it.grade)}, per ${esc(it.per)}${it.teacher?', '+esc(it.teacher):''})`:''}</div>`).join('')}
     <button data-i="${i}">Mark paid ($${o.total} collected)</button></div>`).join(''):'None.';
   [...$('pend').querySelectorAll('button')].forEach(b=>b.onclick=async()=>{ const o=L[+b.dataset.i];
     if(!confirm(`Collected $${o.total} from ${o.buyer}? This sends it to print.`)) return; b.disabled=true;

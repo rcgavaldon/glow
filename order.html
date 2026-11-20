@@ -41,6 +41,7 @@
   .it{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:10px 12px;margin:8px 0;display:flex;justify-content:space-between;gap:10px;align-items:center;font-size:14px}
   .it .x{background:none;color:var(--err);width:auto;margin:0;padding:4px 8px;font-size:14px}
   .it code{font-weight:700}
+  .warn{background:#fff3cd;color:#5c4400;border-radius:10px;padding:10px 12px;font-size:14px;margin-top:12px;text-align:left}
 </style>
 </head>
 <body>
@@ -71,6 +72,7 @@
       <label>Deliver to &mdash; full name</label><input id="dname" maxlength="40" autocomplete="off">
       <div class="grid g2"><div><label>Grade</label><select id="dgrade"><option value="">Pick&hellip;</option><option>9</option><option>10</option><option>11</option><option>12</option><option>Staff</option></select></div>
         <div><label>Period to deliver</label><select id="dper"><option value="">Pick&hellip;</option><option>1</option><option>2</option><option>3</option><option>4</option><option>5</option><option>6</option><option>7</option><option>8</option></select></div></div>
+      <div id="dteachBox"><label>Their teacher that period (so we can find them)</label><input id="dteach" maxlength="30" autocomplete="off" placeholder="e.g. Mr. Smith"></div>
       <label>Gift message (optional) &mdash; shows up when they scan the QR code on the bottom <span class="cnt" id="giftc"></span></label>
       <textarea id="gift" maxlength="160"></textarea>
     </div>
@@ -86,7 +88,9 @@
     <div id="cartBtns"><button id="more" style="background:#555">+ Add another lamp</button><button id="checkout">Checkout</button></div>
     <div id="pay" class="hide">
       <label>Your full name (the buyer)</label><input id="buyer" maxlength="40" autocomplete="off">
-      <div id="contactBox" class="hide"><label>Your phone number or email (so your seller can reach you)</label><input id="contact" maxlength="60" autocomplete="off"></div>
+      <div id="bteachBox"><label>Your 1st period teacher</label><input id="bteach" maxlength="30" autocomplete="off" placeholder="e.g. Ms. Lopez"></div>
+      <div id="contactBox"><label id="contactLab">Personal email for your confirmation (not your school email) &mdash; or your phone number if you don't have one</label><input id="contact" maxlength="60" autocomplete="off" inputmode="email"></div>
+      <div class="warn">&#9888;&#65039; <b>Your order is NOT paid until you pay in person.</b> Orders without a seller code stay on hold and will not be printed until you pay Mr. Gavaldon (HS 112) or a Chess Club member.</div>
       <p style="margin:14px 0 4px"><b>Bring the total to Mr. Gavaldon (Room HS 112) or a Chess Club member to pay.</b> We start printing once you pay &mdash; ready <b>24&ndash;48 hours</b> after payment. If you are paying a seller right now, they type their code:</p>
       <input id="scode" placeholder="Seller code" autocomplete="off" style="text-transform:uppercase;text-align:center">
       <button id="paynow">Pay &amp; place order</button>
@@ -100,7 +104,7 @@
     <div class="code" id="dcart"></div>
     <div><span class="badge" id="dstat"></span></div>
     <div id="dlist" style="text-align:left;margin-top:10px"></div>
-    <div id="payBox">
+    <div id="payBox"><div class="warn" id="dwarn">&#9888;&#65039; <b>NOT PAID YET.</b> Your order is on hold and will not be printed until you pay.</div>
       <p><b>Bring <span id="dprice"></span> to Mr. Gavaldon (Room HS 112) or a Chess Club member.</b><br>We start printing once you pay &mdash; ready 24&ndash;48 hours after payment.<br>The seller types their code here:</p>
       <input id="pcode" placeholder="Seller code" autocomplete="off" style="text-transform:uppercase;text-align:center">
       <button id="pay2">Mark as paid</button>
@@ -170,6 +174,7 @@ function problem(){
   if(!$('dname').value.trim()) return 'Who is it for? Type their full name.';
   if(!OUT&&!$('dgrade').value) return 'Pick their grade.';
   if(!OUT&&!$('dper').value) return 'Pick the period to deliver it.';
+  if(!OUT&&!$('dteach').value.trim()) return 'Type their teacher for that period.';
   return '';
 }
 // ===== true-to-print preview: same sizes/fit rules as the lamp builder, projected onto the lamp picture =====
@@ -252,27 +257,31 @@ const esc=t=>String(t).replace(/&/g,'&amp;').replace(/</g,'&lt;');
 function descr(it){ const w=(it.words||[]).filter(x=>x); return `${esc(it.design)} &bull; ${esc(it.style)}${w.length?': <b>'+esc(w.join(' / '))+'</b>':''}`; }
 function showCart(){
   $('cart').classList.toggle('hide',!cart.length);
-  $('items').innerHTML=cart.map((it,i)=>`<div class="it"><div>${descr(it)}<br><span style="color:var(--muted)">For ${esc(it.dname)}${OUT?'':` &bull; grade ${esc(it.dgrade)} &bull; period ${esc(it.dper)}`}</span></div><div style="text-align:right">$${it.price}<br><button class="x" data-i="${i}">remove</button></div></div>`).join('');
+  $('items').innerHTML=cart.map((it,i)=>`<div class="it"><div>${descr(it)}<br><span style="color:var(--muted)">For ${esc(it.dname)}${OUT?'':` &bull; grade ${esc(it.dgrade)} &bull; period ${esc(it.dper)} &bull; ${esc(it.dteach||'')}`}</span></div><div style="text-align:right">$${it.price}<br><button class="x" data-i="${i}">remove</button></div></div>`).join('');
   [...$('items').querySelectorAll('.x')].forEach(b=>b.onclick=()=>{ cart.splice(+b.dataset.i,1); showCart(); });
   $('ctotal').textContent=cart.length?`Total: $${cart.reduce((a,it)=>a+it.price,0)} for ${cart.length} lamp${cart.length>1?'s':''}`:'';
   if(!cart.length){ $('form').classList.remove('hide'); $('pay').classList.add('hide'); $('cartBtns').classList.remove('hide'); }
 }
-function resetLamp(){ design=null; style=null; [...document.querySelectorAll('.opt.on')].forEach(o=>o.classList.remove('on')); $('lines').innerHTML=''; $('dname').value=''; $('gift').value=''; $('dgrade').value=''; $('dper').value=''; draw(); }
+function resetLamp(){ design=null; style=null; [...document.querySelectorAll('.opt.on')].forEach(o=>o.classList.remove('on')); $('lines').innerHTML=''; $('dname').value=''; $('gift').value=''; $('dgrade').value=''; $('dper').value=''; $('dteach').value=''; draw(); }
 $('add').onclick=()=>{
   const p=problem(); $('err').textContent=p; if(p) return;
   const msg=style==='Heart message'; let w=words().map(x=>tidy(x,msg));
   if(style==='Initials in a heart') w=[(w[0]+w[1]).toUpperCase()];
-  cart.push({design,style,words:w,price:STYLES[style].price,dname:$('dname').value.trim(),dgrade:$('dgrade').value,dper:$('dper').value,gift:$('gift').value.trim()});
+  cart.push({design,style,words:w,price:STYLES[style].price,dname:$('dname').value.trim(),dgrade:$('dgrade').value,dper:$('dper').value,dteach:$('dteach').value.trim(),gift:$('gift').value.trim()});
   resetLamp(); $('form').classList.add('hide'); showCart(); $('cart').scrollIntoView({behavior:'smooth'});
 };
 $('more').onclick=()=>{ $('form').classList.remove('hide'); window.scrollTo({top:0,behavior:'smooth'}); };
 $('checkout').onclick=()=>{ $('cartBtns').classList.add('hide'); $('pay').classList.remove('hide'); if(seller) $('scode').value=seller; $('buyer').focus(); };
 async function place(withCode){
   $('perr').textContent=''; if(!$('buyer').value.trim()){ $('perr').textContent='Type your full name (the buyer).'; return; }
-  if(REF&&!seller&&!$('contact').value.trim()){ $('perr').textContent='Add your phone number or email so your seller can reach you.'; return; }
+  const ct=$('contact').value.trim();
+  if(!OUT&&!$('bteach').value.trim()){ $('perr').textContent='Type your 1st period teacher.'; return; }
+  if(!withCode&&!ct){ $('perr').textContent=OUT?'Add your phone number or email so your seller can reach you.':'Add a personal email (or your phone number) for your confirmation.'; return; }
+  if(ct&&/@burnhamwood\.org$/i.test(ct)){ $('perr').textContent='Use a personal email, not your school email (or your phone number).'; return; }
+  if(ct&&!/^[^@\s]+@[^@\s]+\.[a-z]{2,}$/i.test(ct)&&ct.replace(/\D/g,'').length<10){ $('perr').textContent='That doesn\'t look like an email or a 10-digit phone number.'; return; }
   const code=withCode?($('scode').value||'').trim():''; if(withCode&&!code){ $('perr').textContent='The seller needs to type their code (or choose pay later).'; return; }
   const btns=[$('paynow'),$('paylater')]; btns.forEach(b=>b.disabled=true);
-  try{ const j=await api('POST',{action:'create',token:tok,ref:REF,out:OUT,contact:($('contact')||{}).value||'',buyer:$('buyer').value,seller:code,items:cart.map(it=>({design:it.design,style:it.style,l1:it.words[0]||'',l2:it.words[1]||'',l3:it.words[2]||'',l4:it.words[3]||'',dname:it.dname,dgrade:it.dgrade,dper:it.dper,gift:it.gift}))});
+  try{ const j=await api('POST',{action:'create',token:tok,ref:REF,out:OUT,contact:($('contact')||{}).value||'',bteach:OUT?'':$('bteach').value,buyer:$('buyer').value,seller:code,items:cart.map(it=>({design:it.design,style:it.style,l1:it.words[0]||'',l2:it.words[1]||'',l3:it.words[2]||'',l4:it.words[3]||'',dname:it.dname,dgrade:it.dgrade,dper:it.dper,dteach:it.dteach||'',gift:it.gift}))});
     if(!j.ok){ if(/^LOGIN/.test(j.error)){ setTok(''); } throw new Error(j.error.replace(/^LOGIN: /,'')); } cart=[]; showDone(j); }
   catch(e){ $('perr').textContent='Could not place the order: '+e.message; } finally{ btns.forEach(b=>b.disabled=false); }
 }
@@ -307,12 +316,14 @@ document.addEventListener('input',e=>{ const el=e.target; if(!/^(INPUT|TEXTAREA)
   if(hasBadWord(el.value)){ el.value=''; el.dispatchEvent(new Event('input',{bubbles:false})); $('bwmsg').textContent='Please keep it school-appropriate.'; $('bwmsg').style.display='block'; try{ draw(); }catch(_){}
     setTimeout(()=>$('bwmsg').style.display='none',3500); } },true);
 if(OUT){
-  $('dgrade').closest('.grid').classList.add('hide');
+  $('dgrade').closest('.grid').classList.add('hide'); $('dteachBox').classList.add('hide'); $('bteachBox').classList.add('hide');
+  $('contactLab').textContent='Your phone number or email (so your seller can reach you)';
+  document.querySelectorAll('#pay .warn').forEach(w=>w.classList.add('hide'));
   [...document.querySelectorAll('label')].forEach(l=>{ if(/Deliver to/.test(l.textContent)) l.innerHTML='Who is it for? &mdash; their name'; });
   document.querySelector('.sub').textContent='Holiday fundraiser • every lamp is 3D printed in white';
 }
 if(REF&&!seller){
-  $('contactBox').classList.remove('hide'); $('scode').classList.add('hide'); $('paynow').classList.add('hide');
+  $('scode').classList.add('hide'); $('paynow').classList.add('hide');
   $('paylater').textContent='Place order'; $('paylater').style.cssText='';
   $('pay').querySelector('p').innerHTML='<b>Pay the person who sent you this link.</b> Once they confirm your payment we start printing &mdash; ready <b>24&ndash;48 hours</b> after payment.';
   const pb=$('payBox'); pb.querySelector('p').innerHTML='<b>Pay <span id="dprice"></span> to the person who sent you this link.</b><br>Once they confirm your payment we start printing &mdash; ready 24&ndash;48 hours after payment.';
