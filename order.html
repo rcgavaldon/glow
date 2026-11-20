@@ -41,6 +41,7 @@
   .it{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:10px 12px;margin:8px 0;display:flex;justify-content:space-between;gap:10px;align-items:center;font-size:14px}
   .it .x{background:none;color:var(--err);width:auto;margin:0;padding:4px 8px;font-size:14px}
   .it code{font-weight:700}
+  .apay{display:flex;gap:8px;margin-top:10px} .apay a{flex:1;display:block;padding:12px 6px;border-radius:12px;color:#fff;font-weight:700;text-decoration:none;text-align:center;font-size:16px}
   .warn{background:#fff3cd;color:#5c4400;border-radius:10px;padding:10px 12px;font-size:14px;margin-top:12px;text-align:left}
 </style>
 </head>
@@ -90,7 +91,7 @@
       <label>Your full name (the buyer)</label><input id="buyer" maxlength="40" autocomplete="off">
       <div id="bteachBox"><label>Your 1st period teacher</label><input id="bteach" maxlength="30" autocomplete="off" placeholder="e.g. Ms. Lopez"></div>
       <div id="contactBox"><label id="contactLab">Personal email for your confirmation (not your school email) &mdash; or your phone number if you don't have one</label><input id="contact" maxlength="60" autocomplete="off" inputmode="email"></div>
-      <div class="warn">&#9888;&#65039; <b>Your order is NOT paid until you pay in person.</b> Orders without a seller code stay on hold and will not be printed until you pay Mr. Gavaldon (HS 112) or a Chess Club member.</div>
+      <div class="warn">&#9888;&#65039; <b>Your order is NOT paid until you pay in person.</b> Orders without a seller code stay on hold and will not be printed until you pay Mr. Gavaldon (HS 112) or a Chess Club member &mdash; or pay with Cash App / Venmo on the next screen.</div>
       <p style="margin:14px 0 4px"><b>Bring the total to Mr. Gavaldon (Room HS 112) or a Chess Club member to pay.</b> We start printing once you pay &mdash; ready <b>24&ndash;48 hours</b> after payment. If you are paying a seller right now, they type their code:</p>
       <input id="scode" placeholder="Seller code" autocomplete="off" style="text-transform:uppercase;text-align:center">
       <button id="paynow">Pay &amp; place order</button>
@@ -107,6 +108,7 @@
     <div id="payBox"><div class="warn" id="dwarn">&#9888;&#65039; <b>NOT PAID YET.</b> Your order is on hold and will not be printed until you pay.</div>
       <p><b>Bring <span id="dprice"></span> to Mr. Gavaldon (Room HS 112) or a Chess Club member.</b><br>We start printing once you pay &mdash; ready 24&ndash;48 hours after payment.<br>The seller types their code here:</p>
       <input id="pcode" placeholder="Seller code" autocomplete="off" style="text-transform:uppercase;text-align:center">
+      <div id="appPayBox" class="hide" style="text-align:left;margin:10px 0 4px"><b>Pay now from your phone:</b><div class="apay"><a id="cashBtn" target="_blank" rel="noopener" style="background:#00c244">Cash App</a><a id="venmoBtn" target="_blank" rel="noopener" style="background:#008cff">Venmo</a></div><div style="font-size:13px;color:var(--muted);margin-top:6px">Put your cart number <b id="noteCart"></b> in the note. Your order switches to PAID once Mr. Gavaldon sees the payment &mdash; then it goes to print.</div><p style="margin:12px 0 0;font-size:14px">Or pay in person &mdash; the seller types their code here:</p></div>
       <button id="pay2">Mark as paid</button>
       <div class="err" id="perr2"></div>
     </div>
@@ -291,7 +293,11 @@ function showDone(j){
   $('dcart').textContent=j.cart; const paid=j.status==='PAID';
   $('dstat').textContent=paid?'PAID'+(j.seller?' — '+j.seller:''):'WAITING FOR PAYMENT'; $('dstat').className='badge '+(paid?'paid':'wait');
   $('dlist').innerHTML=(j.items||[]).map(it=>`<div class="it"><div>${descr(it)}<br><span style="color:var(--muted)">For ${esc(it.dname)}</span></div><div><code>${esc(it.code)}</code></div></div>`).join('');
-  $('dprice').textContent='$'+j.total; $('payBox').classList.toggle('hide',paid); history.replaceState(null,'','#'+j.cart);
+  $('dprice').textContent='$'+j.total;
+  if(!REF&&!paid){ const note='Glow lamp '+j.cart;
+    $('cashBtn').href='https://cash.app/$rcgavaldon/'+j.total;
+    $('venmoBtn').href='https://venmo.com/robert-Gavaldon?txn=pay&amount='+j.total+'&note='+encodeURIComponent(note);
+    $('noteCart').textContent=j.cart; $('appPayBox').classList.remove('hide'); } $('payBox').classList.toggle('hide',paid); history.replaceState(null,'','#'+j.cart);
 }
 $('pay2').onclick=async()=>{ $('perr2').textContent=''; $('pay2').disabled=true;
   try{ const j=await api('POST',{action:'pay',cart:$('dcart').textContent,seller:$('pcode').value}); if(!j.ok) throw new Error(j.error); showDone(j); }
