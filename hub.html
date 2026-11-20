@@ -44,6 +44,7 @@
     <div class="kpis" id="kpis"></div>
     <div class="sellers" id="sellers"></div>
     <div class="bar" id="filters"></div>
+    <div class="bar" id="chan"></div>
     <div class="bar"><input id="q" placeholder="Search name, words, code, period…"><button id="refresh">↻ Refresh</button><button onclick="print()">Print list</button></div>
     <table><thead><tr><th>Order</th><th>For (deliver to)</th><th>Lamp</th><th class="hide-sm">Buyer / seller</th><th>Status</th><th>Mark</th></tr></thead><tbody id="rows"></tbody></table>
     </div>
@@ -72,6 +73,7 @@ async function load(){
   orders=j.orders.filter(o=>o['Order #']).reverse(); $('login').style.display='none'; $('app').style.display='block'; $('upd').textContent='updated '+new Date().toLocaleTimeString(); render();
 }
 function showLogin(e){ $('app').style.display='none'; $('login').style.display='block'; $('lerr').textContent=e?('Key not accepted: '+e):''; }
+let chan='all';
 function render(){
   const paid=orders.filter(o=>o.Status==='PAID'); const money=a=>a.reduce((s,o)=>s+Number(o.Price||0),0);
   const c=k=>orders.filter(o=>stage(o)===k).length;
@@ -81,7 +83,10 @@ function render(){
   $('filters').innerHTML=FILTERS.map(([k,l])=>`<button class="f ${filt===k?'on':''}" data-f="${k}">${l} (${k==='all'?orders.length:c(k)})</button>`).join('');
   [...$('filters').children].forEach(b=>b.onclick=()=>{ filt=b.dataset.f; render(); });
   const q=$('q').value.toLowerCase();
-  const list=orders.filter(o=>(filt==='all'||stage(o)===filt)&&(!q||JSON.stringify(o).toLowerCase().includes(q)))
+  const isOut=o=>o.Channel==='Out of school';
+  $('chan').innerHTML=[['all','All'],['in','In school'],['out','Out of school']].map(([k,l])=>`<button class="f ${chan===k?'on':''}" data-c="${k}">${l} (${k==='all'?orders.length:orders.filter(o=>k==='out'?isOut(o):!isOut(o)).length})</button>`).join('');
+  [...$('chan').children].forEach(b=>b.onclick=()=>{ chan=b.dataset.c; render(); });
+  const list=orders.filter(o=>(chan==='all'||(chan==='out')===isOut(o))&&(filt==='all'||stage(o)===filt)&&(!q||JSON.stringify(o).toLowerCase().includes(q)))
     .sort((a,b)=>filt==='todeliver'?(Number(a.Period)-Number(b.Period)):0);
   $('rows').innerHTML=list.map(o=>{ const st=LBL[stage(o)]; const w=[o['Line 1'],o['Line 2'],o['Line 3'],o['Line 4']].filter(x=>x).join(' / ');
     return `<tr><td><b>${esc(o['Order #'])}</b><div class="mut">cart ${esc(o.Cart)}</div></td>

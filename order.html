@@ -107,7 +107,7 @@
     <div id="dlist" style="text-align:left;margin-top:10px"></div>
     <div id="payBox"><div class="warn" id="dwarn">&#9888;&#65039; <b>NOT PAID YET.</b> Your order is on hold and will not be printed until you pay.</div>
       <p><b>Bring <span id="dprice"></span> to Mr. Gavaldon (Room HS 112) or a Chess Club member.</b><br>We start printing once you pay &mdash; ready 24&ndash;48 hours after payment.</p>
-      <div id="appPayBox" class="hide" style="text-align:left;margin:10px 0 4px"><b>Pay now from your phone:</b><div class="apay"><a id="cashBtn" target="_blank" rel="noopener" style="background:#00c244">Cash App</a><a id="venmoBtn" target="_blank" rel="noopener" style="background:#008cff">Venmo</a></div><div style="font-size:13px;color:var(--muted);margin-top:6px">Put your cart number <b id="noteCart"></b> in the note. Your order switches to PAID once Mr. Gavaldon sees the payment &mdash; then it goes to print.</div></div>
+      <div id="appPayBox" class="hide" style="text-align:left;margin:10px 0 4px"><b>Pay now from your phone:</b><div class="apay"><a id="cashBtn" target="_blank" rel="noopener" style="background:#00c244">Cash App</a><a id="venmoBtn" target="_blank" rel="noopener" style="background:#008cff">Venmo</a></div><div style="font-size:13px;color:var(--muted);margin-top:6px">Put your cart number <b id="noteCart"></b> in the note. Your order switches to PAID once Mr. Gavaldon confirms the payment, and you'll get an email that your lamp is being made.</div></div>
       <p id="inPerson" style="margin:12px 0 4px;font-size:14px">Paying a seller in person? They type their code here:</p>
       <input id="pcode" placeholder="Seller code" autocomplete="off" style="text-transform:uppercase;text-align:center">
       <button id="pay2">Mark as paid</button>
@@ -295,7 +295,7 @@ function showDone(j){
   $('dstat').textContent=paid?'PAID'+(j.seller?' — '+j.seller:''):'WAITING FOR PAYMENT'; $('dstat').className='badge '+(paid?'paid':'wait');
   $('dlist').innerHTML=(j.items||[]).map(it=>`<div class="it"><div>${descr(it)}<br><span style="color:var(--muted)">For ${esc(it.dname)}</span></div><div><code>${esc(it.code)}</code></div></div>`).join('');
   $('dprice').textContent='$'+j.total;
-  if(!REF&&!paid){ const note='Glow lamp '+j.cart;
+  if(!paid){ const note='Glow lamp '+j.cart;
     $('cashBtn').href='https://cash.app/$rcgavaldon/'+j.total;
     $('venmoBtn').href='https://venmo.com/robert-Gavaldon?txn=pay&amount='+j.total+'&note='+encodeURIComponent(note);
     $('noteCart').textContent=j.cart; $('appPayBox').classList.remove('hide'); } $('payBox').classList.toggle('hide',paid); history.replaceState(null,'','#'+j.cart);
@@ -332,7 +332,7 @@ if(OUT){
 if(REF&&!seller){
   $('scode').classList.add('hide'); $('paynow').classList.add('hide');
   $('paylater').textContent='Place order'; $('paylater').style.cssText='';
-  $('pay').querySelector('p').innerHTML='<b>Pay the person who sent you this link.</b> Once they confirm your payment we start printing &mdash; ready <b>24&ndash;48 hours</b> after payment.';
+  $('pay').querySelector('p').innerHTML='<b>Pay the person who sent you this link</b> (or with Cash App / Venmo on the next screen). Once your payment is confirmed we start printing &mdash; ready <b>24&ndash;48 hours</b> after payment.';
   const pb=$('payBox'); pb.querySelector('p').innerHTML='<b>Pay <span id="dprice"></span> to the person who sent you this link.</b><br>Once they confirm your payment we start printing &mdash; ready 24&ndash;48 hours after payment.';
   $('pcode').classList.add('hide'); $('pay2').classList.add('hide'); $('inPerson').classList.add('hide');
 }
