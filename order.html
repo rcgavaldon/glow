@@ -106,9 +106,10 @@
     <div><span class="badge" id="dstat"></span></div>
     <div id="dlist" style="text-align:left;margin-top:10px"></div>
     <div id="payBox"><div class="warn" id="dwarn">&#9888;&#65039; <b>NOT PAID YET.</b> Your order is on hold and will not be printed until you pay.</div>
-      <p><b>Bring <span id="dprice"></span> to Mr. Gavaldon (Room HS 112) or a Chess Club member.</b><br>We start printing once you pay &mdash; ready 24&ndash;48 hours after payment.<br>The seller types their code here:</p>
+      <p><b>Bring <span id="dprice"></span> to Mr. Gavaldon (Room HS 112) or a Chess Club member.</b><br>We start printing once you pay &mdash; ready 24&ndash;48 hours after payment.</p>
+      <div id="appPayBox" class="hide" style="text-align:left;margin:10px 0 4px"><b>Pay now from your phone:</b><div class="apay"><a id="cashBtn" target="_blank" rel="noopener" style="background:#00c244">Cash App</a><a id="venmoBtn" target="_blank" rel="noopener" style="background:#008cff">Venmo</a></div><div style="font-size:13px;color:var(--muted);margin-top:6px">Put your cart number <b id="noteCart"></b> in the note. Your order switches to PAID once Mr. Gavaldon sees the payment &mdash; then it goes to print.</div></div>
+      <p style="margin:12px 0 4px;font-size:14px">Paying a seller in person? They type their code here:</p>
       <input id="pcode" placeholder="Seller code" autocomplete="off" style="text-transform:uppercase;text-align:center">
-      <div id="appPayBox" class="hide" style="text-align:left;margin:10px 0 4px"><b>Pay now from your phone:</b><div class="apay"><a id="cashBtn" target="_blank" rel="noopener" style="background:#00c244">Cash App</a><a id="venmoBtn" target="_blank" rel="noopener" style="background:#008cff">Venmo</a></div><div style="font-size:13px;color:var(--muted);margin-top:6px">Put your cart number <b id="noteCart"></b> in the note. Your order switches to PAID once Mr. Gavaldon sees the payment &mdash; then it goes to print.</div><p style="margin:12px 0 0;font-size:14px">Or pay in person &mdash; the seller types their code here:</p></div>
       <button id="pay2">Mark as paid</button>
       <div class="err" id="perr2"></div>
     </div>
