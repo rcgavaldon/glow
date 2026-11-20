@@ -86,6 +86,7 @@
     <div id="cartBtns"><button id="more" style="background:#555">+ Add another lamp</button><button id="checkout">Checkout</button></div>
     <div id="pay" class="hide">
       <label>Your full name (the buyer)</label><input id="buyer" maxlength="40" autocomplete="off">
+      <div id="contactBox" class="hide"><label>Your phone number or email (so your seller can reach you)</label><input id="contact" maxlength="60" autocomplete="off"></div>
       <p style="margin:14px 0 4px"><b>Bring the total to Mr. Gavaldon (Room HS 112) or a Chess Club member to pay.</b> We start printing once you pay &mdash; ready <b>24&ndash;48 hours</b> after payment. If you are paying a seller right now, they type their code:</p>
       <input id="scode" placeholder="Seller code" autocomplete="off" style="text-transform:uppercase;text-align:center">
       <button id="paynow">Pay &amp; place order</button>
@@ -140,7 +141,8 @@ const STYLES = {
   'BFFs':                {price:10, hint:'2 to 4 names, up to 8 letters each', lines:[['Name 1',8],['Name 2',8],['Name 3 (optional)',8],['Name 4 (optional)',8]]},
 };
 let design=null, style=null; const $=id=>document.getElementById(id);
-const seller = (()=>{ try{ const q=new URLSearchParams(location.search).get('seller'); if(q!==null){ localStorage.setItem('glowSeller', q.toUpperCase()); } return localStorage.getItem('glowSeller')||''; }catch(e){ return ''; } })();
+const QS=new URLSearchParams(location.search), REF=(QS.get('ref')||'').trim(), OUT=!!REF||QS.get('out')==='1';
+const seller = REF&&QS.get('seller')===null ? '' : (()=>{ try{ const q=QS.get('seller'); if(q!==null){ localStorage.setItem('glowSeller', q.toUpperCase()); } return localStorage.getItem('glowSeller')||''; }catch(e){ return ''; } })();
 
 function card(el, label, sub, img, on){ const d=document.createElement('div'); d.className='opt'; d.innerHTML=(img?`<img src="${img}" alt="">`:'')+`<b>${label}</b>`+(sub?`<small>${sub}</small>`:''); d.onclick=on; el.appendChild(d); return d; }
 DESIGNS.forEach(([n,img])=>{ const d=card($('designs'), n, '', img, ()=>{ design=n; [...$('designs').children].forEach(c=>c.classList.toggle('on',c===d)); draw(); }); });
@@ -166,8 +168,8 @@ function problem(){
   if(style==='BFFs'&&w.filter(x=>x).length<2) return 'BFFs needs at least 2 names.';
   if(fitErr) return fitErr;
   if(!$('dname').value.trim()) return 'Who is it for? Type their full name.';
-  if(!$('dgrade').value) return 'Pick their grade.';
-  if(!$('dper').value) return 'Pick the period to deliver it.';
+  if(!OUT&&!$('dgrade').value) return 'Pick their grade.';
+  if(!OUT&&!$('dper').value) return 'Pick the period to deliver it.';
   return '';
 }
 // ===== true-to-print preview: same sizes/fit rules as the lamp builder, projected onto the lamp picture =====
@@ -250,7 +252,7 @@ const esc=t=>String(t).replace(/&/g,'&amp;').replace(/</g,'&lt;');
 function descr(it){ const w=(it.words||[]).filter(x=>x); return `${esc(it.design)} &bull; ${esc(it.style)}${w.length?': <b>'+esc(w.join(' / '))+'</b>':''}`; }
 function showCart(){
   $('cart').classList.toggle('hide',!cart.length);
-  $('items').innerHTML=cart.map((it,i)=>`<div class="it"><div>${descr(it)}<br><span style="color:var(--muted)">For ${esc(it.dname)} &bull; grade ${esc(it.dgrade)} &bull; period ${esc(it.dper)}</span></div><div style="text-align:right">$${it.price}<br><button class="x" data-i="${i}">remove</button></div></div>`).join('');
+  $('items').innerHTML=cart.map((it,i)=>`<div class="it"><div>${descr(it)}<br><span style="color:var(--muted)">For ${esc(it.dname)}${OUT?'':` &bull; grade ${esc(it.dgrade)} &bull; period ${esc(it.dper)}`}</span></div><div style="text-align:right">$${it.price}<br><button class="x" data-i="${i}">remove</button></div></div>`).join('');
   [...$('items').querySelectorAll('.x')].forEach(b=>b.onclick=()=>{ cart.splice(+b.dataset.i,1); showCart(); });
   $('ctotal').textContent=cart.length?`Total: $${cart.reduce((a,it)=>a+it.price,0)} for ${cart.length} lamp${cart.length>1?'s':''}`:'';
   if(!cart.length){ $('form').classList.remove('hide'); $('pay').classList.add('hide'); $('cartBtns').classList.remove('hide'); }
@@ -267,9 +269,10 @@ $('more').onclick=()=>{ $('form').classList.remove('hide'); window.scrollTo({top
 $('checkout').onclick=()=>{ $('cartBtns').classList.add('hide'); $('pay').classList.remove('hide'); if(seller) $('scode').value=seller; $('buyer').focus(); };
 async function place(withCode){
   $('perr').textContent=''; if(!$('buyer').value.trim()){ $('perr').textContent='Type your full name (the buyer).'; return; }
+  if(REF&&!seller&&!$('contact').value.trim()){ $('perr').textContent='Add your phone number or email so your seller can reach you.'; return; }
   const code=withCode?($('scode').value||'').trim():''; if(withCode&&!code){ $('perr').textContent='The seller needs to type their code (or choose pay later).'; return; }
   const btns=[$('paynow'),$('paylater')]; btns.forEach(b=>b.disabled=true);
-  try{ const j=await api('POST',{action:'create',token:tok,buyer:$('buyer').value,seller:code,items:cart.map(it=>({design:it.design,style:it.style,l1:it.words[0]||'',l2:it.words[1]||'',l3:it.words[2]||'',l4:it.words[3]||'',dname:it.dname,dgrade:it.dgrade,dper:it.dper,gift:it.gift}))});
+  try{ const j=await api('POST',{action:'create',token:tok,ref:REF,out:OUT,contact:($('contact')||{}).value||'',buyer:$('buyer').value,seller:code,items:cart.map(it=>({design:it.design,style:it.style,l1:it.words[0]||'',l2:it.words[1]||'',l3:it.words[2]||'',l4:it.words[3]||'',dname:it.dname,dgrade:it.dgrade,dper:it.dper,gift:it.gift}))});
     if(!j.ok){ if(/^LOGIN/.test(j.error)){ setTok(''); } throw new Error(j.error.replace(/^LOGIN: /,'')); } cart=[]; showDone(j); }
   catch(e){ $('perr').textContent='Could not place the order: '+e.message; } finally{ btns.forEach(b=>b.disabled=false); }
 }
@@ -291,10 +294,10 @@ $('again').onclick=()=>{ history.replaceState(null,'',location.pathname+location
 let tok='';
 function tokInfo(t){ try{ const v=atob(t.split('.')[0].replace(/-/g,'+').replace(/_/g,'/')).split('|'); return +v[1]>Date.now()?v[0]:''; }catch(e){ return ''; } }
 function setTok(t){ tok=t; try{ t?localStorage.setItem('glowLogin',t):localStorage.removeItem('glowLogin'); }catch(e){}
-  const who=tokInfo(tok); const ordering=!$('done').classList.contains('hide');
-  $('gate').classList.toggle('hide',!!who||ordering); $('who').classList.toggle('hide',!who);
+  const who=tokInfo(tok)||((OUT||seller)?' ':''); const ordering=!$('done').classList.contains('hide');
+  $('gate').classList.toggle('hide',!!who||ordering); $('who').classList.toggle('hide',!who||who===' ');
   if(!ordering){ $('form').classList.toggle('hide',!who); if(!who) $('cart').classList.add('hide'); else showCart(); }
-  if(who){ $('who').innerHTML='Signed in as <b>'+esc(who)+'</b> &bull; <a href="#" id="out">sign out</a>'; $('out').onclick=e=>{ e.preventDefault(); setTok(''); }; } }
+  if(who&&who!==' '){ $('who').innerHTML='Signed in as <b>'+esc(who)+'</b> &bull; <a href="#" id="out">sign out</a>'; $('out').onclick=e=>{ e.preventDefault(); setTok(''); }; } }
 $('loginBtn').href=LOGIN_URL;
 (()=>{ const m=location.hash.match(/^#login=(.+)$/); let t='';
   if(m){ t=m[1]; history.replaceState(null,'',location.pathname+location.search); } else { try{ t=localStorage.getItem('glowLogin')||''; }catch(e){} }
@@ -303,6 +306,18 @@ $('loginBtn').href=LOGIN_URL;
 document.addEventListener('input',e=>{ const el=e.target; if(!/^(INPUT|TEXTAREA)$/.test(el.tagName)) return;
   if(hasBadWord(el.value)){ el.value=''; el.dispatchEvent(new Event('input',{bubbles:false})); $('bwmsg').textContent='Please keep it school-appropriate.'; $('bwmsg').style.display='block'; try{ draw(); }catch(_){}
     setTimeout(()=>$('bwmsg').style.display='none',3500); } },true);
+if(OUT){
+  $('dgrade').closest('.grid').classList.add('hide');
+  [...document.querySelectorAll('label')].forEach(l=>{ if(/Deliver to/.test(l.textContent)) l.innerHTML='Who is it for? &mdash; their name'; });
+  document.querySelector('.sub').textContent='Holiday fundraiser • every lamp is 3D printed in white';
+}
+if(REF&&!seller){
+  $('contactBox').classList.remove('hide'); $('scode').classList.add('hide'); $('paynow').classList.add('hide');
+  $('paylater').textContent='Place order'; $('paylater').style.cssText='';
+  $('pay').querySelector('p').innerHTML='<b>Pay the person who sent you this link.</b> Once they confirm your payment we start printing &mdash; ready <b>24&ndash;48 hours</b> after payment.';
+  const pb=$('payBox'); pb.querySelector('p').innerHTML='<b>Pay <span id="dprice"></span> to the person who sent you this link.</b><br>Once they confirm your payment we start printing &mdash; ready 24&ndash;48 hours after payment.';
+  $('pcode').classList.add('hide'); $('pay2').classList.add('hide');
+}
 draw();
 </script>
 </body>

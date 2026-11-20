@@ -20,6 +20,10 @@
   .o{display:flex;justify-content:space-between;padding:8px 0;border-bottom:1px solid var(--line);font-size:14px} .o:last-child{border:0}
   .mut{color:var(--muted);font-size:13px} .err{color:#b3261e;font-size:14px;margin-top:8px}
   ol{padding-left:20px;margin:6px 0} li{margin:4px 0}
+  .pc{border:1px solid var(--line);border-radius:12px;padding:10px 12px;margin:8px 0;font-size:14px}
+  .pc button{margin-top:8px;padding:10px;font-size:15px;background:var(--ok)}
+  .tabs{display:flex;gap:6px;margin-top:8px} .tabs button{margin:0;padding:9px;font-size:14px;background:#888} .tabs button.on{background:var(--gold)}
+  .link{word-break:break-all;font-size:13px;background:var(--bg);border-radius:8px;padding:8px;margin-top:6px}
 </style>
 </head>
 <body>
@@ -35,7 +39,15 @@
   <div id="me" style="display:none">
     <div class="card" style="text-align:center"><div class="mut">Seller</div><div style="font:700 22px Georgia,serif" id="name"></div><div class="mut">ID <b id="cid"></b></div></div>
     <div class="big" style="margin-top:12px"><div><b id="lamps">0</b><span>Lamps sold</span></div><div><b id="money">$0</b><span>Collected</span></div></div>
-    <a class="btn" id="sell" href="#">Take an order on this phone</a>
+    <a class="btn" id="sell" href="#">Take a school order on this phone</a>
+    <a class="btn" id="sellOut" href="#" style="background:#555">Take an outside order on this phone</a>
+    <div class="card"><b>Pending orders</b> <span class="mut">&mdash; collect the money, then tap <b>Mark paid</b> so it gets printed</span>
+      <div class="tabs"><button id="tIn" class="on">In school (<span id="nIn">0</span>)</button><button id="tOut">Out of school (<span id="nOut">0</span>)</button></div>
+      <div id="pend" class="mut">None.</div></div>
+    <div class="card"><b>Your outside order link</b>
+      <div class="mut">Send this to family &amp; friends outside of school. No school sign-in needed. Their orders show up under <b>Out of school</b> above, and nothing gets printed until you mark it paid.</div>
+      <div class="link" id="olink"></div>
+      <button id="share">Share / copy link</button></div>
     <div class="card"><b>How selling works</b>
       <ol><li>Tap <b>Take an order</b> and hand the phone to your buyer (or type for them).</li>
       <li>They design the lamp(s) and add who it's for.</li>
@@ -58,8 +70,24 @@ async function open_(c){
   $('login').style.display='none'; $('me').style.display='block';
   $('name').textContent=j.seller; $('cid').textContent=c.toUpperCase(); $('lamps').textContent=j.lamps; $('money').textContent='$'+j.money;
   $('sell').href='order.html?seller='+encodeURIComponent(c.toUpperCase());
+  $('sellOut').href='order.html?out=1&seller='+encodeURIComponent(c.toUpperCase());
+  const link=new URL('order.html?ref='+j.ref, location.href).href; $('olink').textContent=link;
+  $('share').onclick=async()=>{ try{ if(navigator.share){ await navigator.share({title:'Order a Glow Lamp',text:'Order a custom 3D-printed glow lamp:',url:link}); return; } }catch(e){}
+    try{ await navigator.clipboard.writeText(link); $('share').textContent='Copied!'; setTimeout(()=>$('share').textContent='Share / copy link',1500); }catch(e){ prompt('Copy this link:',link); } };
+  PEND={in:j.pendingIn||[],out:j.pendingOut||[]}; $('nIn').textContent=PEND.in.length; $('nOut').textContent=PEND.out.length; showPend();
   $('orders').innerHTML=j.orders.length?j.orders.map(o=>`<div class="o"><span><b>${esc(o.code)}</b> &bull; ${esc(o.design)} &bull; ${esc(o.style)} &bull; for ${esc(o.forName)}</span><span>${o.delivered?'Delivered':o.printed?'Printed':'Paid'}</span></div>`).join(''):'None yet.';
 }
+let PEND={in:[],out:[]}, TAB='in';
+function showPend(){ const L=PEND[TAB];
+  $('pend').innerHTML=L.length?L.map((o,i)=>`<div class="pc"><b>${esc(o.buyer)}</b> &bull; $${o.total}${o.contact?` &bull; ${esc(o.contact)}`:''}
+    ${o.items.map(it=>`<div>${esc(it.design)} &bull; ${esc(it.style)}${it.words.length?' &bull; '+esc(it.words.join(' / ')):''} &bull; for ${esc(it.forName)}${it.grade?` (gr ${esc(it.grade)}, per ${esc(it.per)})`:''}</div>`).join('')}
+    <button data-i="${i}">Mark paid ($${o.total} collected)</button></div>`).join(''):'None.';
+  [...$('pend').querySelectorAll('button')].forEach(b=>b.onclick=async()=>{ const o=L[+b.dataset.i];
+    if(!confirm(`Collected $${o.total} from ${o.buyer}? This sends it to print.`)) return; b.disabled=true;
+    const j=await (await fetch(API,{method:'POST',headers:{'Content-Type':'text/plain'},body:JSON.stringify({action:'pay',cart:o.cart,seller:code})})).json();
+    if(!j.ok){ alert(j.error); b.disabled=false; return; } open_(code); }); }
+$('tIn').onclick=()=>{ TAB='in'; $('tIn').classList.add('on'); $('tOut').classList.remove('on'); showPend(); };
+$('tOut').onclick=()=>{ TAB='out'; $('tOut').classList.add('on'); $('tIn').classList.remove('on'); showPend(); };
 $('go').onclick=()=>{ code=$('code').value.trim().toUpperCase(); open_(code); };
 $('out').onclick=()=>{ try{ localStorage.removeItem('glowSeller'); }catch(e){} location.href=location.pathname; };
 if(code) open_(code).catch(()=>{ $('login').style.display='block'; }); else $('login').style.display='block';
